@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  user_id                             Int                             @id @default(autoincrement())
+  name                                String?
+  email                               String?                         
+  image                               String?                         
+  phone                               String?                         @unique @db.VarChar(20)
+  username                            String?                         
+  salt                                String?                         @db.VarChar(255)
+  password                            String?                         @db.VarChar(100)
+  age                                 Int?
+  refresh_token                       String?                         @db.Text
+  token_version                       Int                             @default(0)
+  subscription                        Boolean?                        @default(false)
+  alert_limit                         Int?                            
+  status                              Boolean?                        @default(true)
+  createdAt                           DateTime                        @default(now())
+  updatedAt                           DateTime                        @default(now()) @updatedAt
+
+  user_statements                     user_statements[]
+  user_transactions                   user_transactions[]
+  alert                               alert[]
+  notification                        notification[]
+  goals                               goals[]
+  category_spend                      category_spend[]
+}
+
+model user_statements {
+  id                                  Int                              @id @default(autoincrement())
+  name                                String?
+  url                                 String?      
+  user_id                             Int
+  user                                user                            @relation(fields: [user_id], references: [user_id])                    
+  status                              Boolean?                        @default(true)
+  createdAt                           DateTime                        @default(now())
+  updatedAt                           DateTime                        @default(now()) @updatedAt       
+  user_transactions                   user_transactions[]             
+}
+
+model category_spend {
+  id                                  Int                             @id @default(autoincrement())
+  average                             String?
+  cat_name                            String?
+  user_id                             Int
+  user                                user                            @relation(fields: [user_id], references: [user_id])                  
+  status                              Boolean?                        @default(true)
+  createdAt                           DateTime                        @default(now())
+  updatedAt                           DateTime                        @default(now()) @updatedAt  
+  @@unique([user_id, cat_name])
+}
+
+model user_transactions {
+  id                                  Int                              @id @default(autoincrement())
+  user_statement_id                   Int
+  user_id                             Int
+  date                                String?
+  narration                           String?
+  balance                             Float?
+  category                            String?
+  amount                              Float?
+  chqRefNo                            String?
+  type                                String?
+  user_statements                     user_statements                 @relation(fields: [user_statement_id], references: [id])    
+  user                                user                            @relation(fields: [user_id], references: [user_id])                  
+  status                              Boolean?                        @default(true)
+  createdAt                           DateTime                        @default(now())
+  updatedAt                           DateTime                        @default(now()) @updatedAt                              
+}
+
+model alert {
+  id                                  Int                             @id @default(autoincrement())
+  message                             String?
+  user_id                             Int
+  user                                user                            @relation(fields: [user_id], references: [user_id])                  
+  status                              Boolean?                        @default(true)
+  createdAt                           DateTime                        @default(now())
+  updatedAt                           DateTime                        @default(now()) @updatedAt  
+}
+
+model notification {
+  id                                  Int                             @id @default(autoincrement())
+  message                             String?
+  type                                String?                         // e.g., 'ALERT', 'TRANSACTION', 'SYSTEM'
+  is_read                             Boolean?                        @default(false)
+  user_id                             Int
+  user                                user                            @relation(fields: [user_id], references: [user_id])
+  status                              Boolean?                        @default(true)
+  createdAt                           DateTime                        @default(now())
+  updatedAt                           DateTime                        @default(now()) @updatedAt
+}
+
+model goals {
+  id                                  Int                             @id @default(autoincrement())
+  name                                String?
+  years                               String?
+  target                              String?
+  invested                            String?
+  user_id                             Int
+  user                                user                            @relation(fields: [user_id], references: [user_id])
+  status                              Boolean?                        @default(true)
+  createdAt                           DateTime                        @default(now())
+  updatedAt                           DateTime                        @default(now()) @updatedAt
+}
+
+model UserTransaction {
+  id        Int      @id @default(autoincrement())
+  amount    Decimal  
+  category  String   @db.VarChar(100)
+  date      DateTime
+  narration String?  // Optional field
+  type      TransactionType
+  balance   Decimal  
+}
+
+enum TransactionType {
+  credit
+  debit
+}
